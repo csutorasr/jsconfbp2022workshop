@@ -23,7 +23,7 @@ export class Controller {
   ws_video!: WebSocket;
   ws_telemetry!: WebSocket;
   telemetry_obj = document.getElementById("telemetryFeed") as HTMLElement;
-  h264_player: any;
+  h264_player!: { canvas: HTMLCanvasElement };
   kMap: Record<string, boolean> = {};
   stickData = {
     roll: 0,
@@ -49,7 +49,6 @@ export class Controller {
   }
 
   processTelemetry(data) {
-    console.log(data);
     this.telemetry_obj.innerHTML = data.data;
   }
 

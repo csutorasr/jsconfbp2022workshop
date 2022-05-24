@@ -1,26 +1,6 @@
 import { Player } from "./Player";
 
-var ws_video: WebSocket;
-var ws_telemetry: WebSocket;
-var telemetry_obj = document.getElementById("telemetryFeed");
-var h264_player: any;
-var kMap = {};
-var stickData = {
-  roll: 0,
-  pitch: 0,
-  throttle: 0,
-  yaw: 0,
-};
-
-function initVideoFeedReceive() {
-  ws_video.send("f");
-}
-
-function initTelemetryFeedReceive() {
-  ws_telemetry.send("t");
-}
-
-var toUint8Array = function (parStr) {
+const toUint8Array = function (parStr: string) {
   var raw = parStr;
   var rawLength = raw.length;
   var array = new Uint8Array(new ArrayBuffer(rawLength));
@@ -32,133 +12,172 @@ var toUint8Array = function (parStr) {
   return array;
 };
 
-function processFrame(imgString) {
-  if (imgString.data != "false") {
-    h264_player.decode(toUint8Array(imgString.data));
-  } else {
-    console.log(imgString);
-  }
-}
-
-function processTelemetry(data) {
-  console.log(data);
-  telemetry_obj.innerHTML = data.data;
-}
-
-function connect() {
-  try {
-    ws_video = new WebSocket("ws://127.0.0.1:8081/");
-    ws_video.onmessage = function (data) {
-      processFrame(data);
-    };
-    ws_video.onopen = function () {
-      initVideoFeedReceive();
-    };
-    ws_video.onerror = function () {
-      ws_video.close();
-    };
-  } catch (e) {
-    console.log("Error", "Video", "reconnect");
-  }
-
-  try {
-    ws_telemetry = new WebSocket("ws://127.0.0.1:8082/");
-    ws_telemetry.onmessage = function (data) {
-      processTelemetry(data);
-    };
-    ws_telemetry.onopen = function () {
-      initTelemetryFeedReceive();
-    };
-    ws_telemetry.onerror = function () {
-      ws_telemetry.close();
-    };
-  } catch (e) {
-    console.log("Error", "Telemetry", "reconnect");
-  }
-}
-
-function initCanvas() {
-  h264_player = new Player({
-    useWorker: true,
-    webgl: "auto",
-    size: { width: 960, height: 720 },
-  });
-  document.getElementById("videoFeed").appendChild(h264_player.canvas);
-}
-
-function initKeyboard() {
-  document.body.onkeydown = document.body.onkeyup = function (e) {
-    e.preventDefault();
-    kMap[e.code] = e.type == "keydown" ? true : false;
-    keyboardEvent(e);
+export class Controller {
+  ws_video!: WebSocket;
+  ws_telemetry!: WebSocket;
+  telemetry_obj = document.getElementById("telemetryFeed") as HTMLElement;
+  h264_player: any;
+  kMap: Record<string, boolean> = {};
+  stickData = {
+    roll: 0,
+    pitch: 0,
+    throttle: 0,
+    yaw: 0,
   };
-}
 
-var speed = 0.5;
-function keyboardEvent(e) {
-  if (
-    kMap.Space === true &&
-    (kMap.ShiftLeft === true || kMap.ShiftRight === true)
-  ) {
-    kMap.Space = false;
-    sendCmd("takeoff", 0);
-  } else if (kMap.Space === true) {
-    sendCmd("land", 0);
+  initVideoFeedReceive() {
+    this.ws_video.send("f");
   }
-  if (
-    kMap.KeyW === true ||
-    kMap.KeyA === true ||
-    kMap.KeyS === true ||
-    kMap.KeyD === true ||
-    kMap.ArrowUp === true ||
-    kMap.ArrowDown === true ||
-    kMap.ArrowLeft === true ||
-    kMap.ArrowRight === true
-  ) {
-    stickData.yaw =
-      speed * (kMap.KeyA === true ? -1 : kMap.KeyD === true ? 1 : 0);
-    stickData.throttle =
-      speed * (kMap.KeyS === true ? -1 : kMap.KeyW === true ? 1 : 0);
-    stickData.roll =
-      speed * (kMap.ArrowLeft === true ? -1 : kMap.ArrowRight === true ? 1 : 0);
-    stickData.pitch =
-      speed * (kMap.ArrowDown === true ? -1 : kMap.ArrowUp === true ? 1 : 0);
 
-    console.log(stickData);
-    sendCmd("stick", stickData);
-  } else {
-    stickData.yaw = 0;
-    stickData.throttle = 0;
-    stickData.roll = 0;
-    stickData.pitch = 0;
-    console.log(stickData);
-    sendCmd("stick", stickData);
+  initTelemetryFeedReceive() {
+    this.ws_telemetry.send("t");
   }
-  return false;
-}
 
-function initUI() {
-  // settings: exposure value
-  document.getElementById("settings-ev").onchange = function () {
-    sendCmd("ev", document.getElementById("settings-ev").value);
-  };
-}
+  processFrame(imgString) {
+    if (imgString.data != "false") {
+      this.h264_player.decode(toUint8Array(imgString.data));
+    } else {
+      console.log(imgString);
+    }
+  }
 
-function initPing() {
-  // ping backend every 0.5 seconds
-  setInterval(function () {
-    sendCmd("ping", 0);
-  }, 500);
-}
+  processTelemetry(data) {
+    console.log(data);
+    this.telemetry_obj.innerHTML = data.data;
+  }
 
-function sendCmd(_cmd, _value) {
-  if (ws_telemetry) {
-    ws_telemetry.send(JSON.stringify({ cmd: { cmd: _cmd, value: _value } }));
+  connect() {
+    try {
+      this.ws_video = new WebSocket("ws://127.0.0.1:8081/");
+      this.ws_video.onmessage = (data) => {
+        this.processFrame(data);
+      };
+      this.ws_video.onopen = () => {
+        this.initVideoFeedReceive();
+      };
+      this.ws_video.onerror = () => {
+        this.ws_video.close();
+      };
+    } catch (e) {
+      console.log("Error", "Video", "reconnect");
+    }
+
+    try {
+      this.ws_telemetry = new WebSocket("ws://127.0.0.1:8082/");
+      this.ws_telemetry.onmessage = (data) => {
+        this.processTelemetry(data);
+      };
+      this.ws_telemetry.onopen = () => {
+        this.initTelemetryFeedReceive();
+      };
+      this.ws_telemetry.onerror = () => {
+        this.ws_telemetry.close();
+      };
+    } catch (e) {
+      console.log("Error", "Telemetry", "reconnect");
+    }
+  }
+
+  private initCanvas() {
+    this.h264_player = new Player({
+      useWorker: true,
+      webgl: "auto",
+      size: { width: 960, height: 720 },
+    });
+    document.getElementById("videoFeed").appendChild(this.h264_player.canvas);
+  }
+
+  private initKeyboard() {
+    document.body.onkeydown = document.body.onkeyup = (e) => {
+      e.preventDefault();
+      this.kMap[e.code] = e.type == "keydown" ? true : false;
+      this.keyboardEvent(e);
+    };
+  }
+
+  speed = 0.5;
+  keyboardEvent(e: KeyboardEvent) {
+    if (
+      this.kMap.Space === true &&
+      (this.kMap.ShiftLeft === true || this.kMap.ShiftRight === true)
+    ) {
+      this.kMap.Space = false;
+      this.sendCmd("takeoff", 0);
+    } else if (this.kMap.Space === true) {
+      this.sendCmd("land", 0);
+    }
+    const stickData: Record<string, number> = {};
+    if (
+      this.kMap.KeyW === true ||
+      this.kMap.KeyA === true ||
+      this.kMap.KeyS === true ||
+      this.kMap.KeyD === true ||
+      this.kMap.ArrowUp === true ||
+      this.kMap.ArrowDown === true ||
+      this.kMap.ArrowLeft === true ||
+      this.kMap.ArrowRight === true
+    ) {
+      stickData.yaw =
+        this.speed *
+        (this.kMap.KeyA === true ? -1 : this.kMap.KeyD === true ? 1 : 0);
+      stickData.throttle =
+        this.speed *
+        (this.kMap.KeyS === true ? -1 : this.kMap.KeyW === true ? 1 : 0);
+      stickData.roll =
+        this.speed *
+        (this.kMap.ArrowLeft === true
+          ? -1
+          : this.kMap.ArrowRight === true
+          ? 1
+          : 0);
+      stickData.pitch =
+        this.speed *
+        (this.kMap.ArrowDown === true
+          ? -1
+          : this.kMap.ArrowUp === true
+          ? 1
+          : 0);
+
+      console.log(stickData);
+      this.sendCmd("stick", stickData);
+    } else {
+      stickData.yaw = 0;
+      stickData.throttle = 0;
+      stickData.roll = 0;
+      stickData.pitch = 0;
+      console.log(stickData);
+      this.sendCmd("stick", stickData);
+    }
+    return false;
+  }
+
+  private initUI() {
+    // settings: exposure value
+    document.getElementById("settings-ev").onchange = () => {
+      this.sendCmd("ev", document.getElementById("settings-ev").value);
+    };
+  }
+
+  private initPing() {
+    // ping backend every 0.5 seconds
+    setInterval(() => {
+      this.sendCmd("ping", 0);
+    }, 500);
+  }
+
+  sendCmd(_cmd: string, _value: unknown) {
+    if (this.ws_telemetry) {
+      this.ws_telemetry.send(
+        JSON.stringify({ cmd: { cmd: _cmd, value: _value } })
+      );
+    }
+  }
+
+  init() {
+    this.initUI();
+    this.initKeyboard();
+    this.initCanvas();
+    this.initPing();
+    this.connect();
   }
 }
-
-initUI();
-initKeyboard();
-initCanvas();
-initPing();
-connect();

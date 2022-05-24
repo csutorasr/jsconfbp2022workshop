@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite App</title>
+  </head>
+  <body>
+    <div class="container-fluid">
+      <div class="row"><div class="col-1">takeoff:</div><div class="col-11">Shift+Space</div></div>
+      <div class="row"><div class="col-1">land:</div><div class="col-11">Space</div></div>
+      <div class="row"><div class="col-1">yaw:</div><div class="col-11">A, D</div></div>
+      <div class="row"><div class="col-1">throttle:</div><div class="col-11">W, S</div></div>
+      <div class="row"><div class="col-1">pitch:</div><div class="col-11">Up Arrow, Down Arrow</div></div>
+      <div class="row"><div class="col-1">roll:</div><div class="col-11">Left Arrow, Right Arrow</div></div>
+      <div class="row">
+        <div class="col-6">
+          <div id="videoFeed"></div>
+        </div>
+        <div class="col-6">
+          <div id="settings">
+            <select class="settings ev" id="settings-ev">
+              <option value="-3.0">-3.0</option>
+              <option value="-2.7">-2.7</option>
+              <option value="-2.3">-2.3</option>
+              <option value="-2.0">-2.0</option>
+              <option value="-1.7">-1.7</option>
+              <option value="-1.3">-1.3</option>
+              <option value="-1.0">-1.0</option>
+              <option value="-0.7">-0.7</option>
+              <option value="-0.3">-0.3</option>
+              <option value="0.0" selected>0</option>
+              <option value="+0.3">+0.3</option>
+              <option value="+0.7">+0.7</option>
+              <option value="+1.0">+1.0</option>
+              <option value="+1.3">+1.3</option>
+              <option value="+1.7">+1.7</option>
+              <option value="+2.0">+2.0</option>
+              <option value="+2.3">+2.3</option>
+              <option value="+2.7">+2.7</option>
+              <option value="+3.0">+3.0</option>
+            </select>
+          </div>
+          <div id="telemetryFeed"></div>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

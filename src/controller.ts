@@ -1,5 +1,12 @@
 import { Player } from "./Player";
 
+interface StickData {
+  yaw: number;
+  throttle: number;
+  roll: number;
+  pitch: number;
+}
+
 const toUint8Array = function (parStr: string) {
   var raw = parStr;
   var rawLength = raw.length;
@@ -106,7 +113,6 @@ export class Controller {
     } else if (this.kMap.Space === true) {
       this.sendCmd("land", 0);
     }
-    const stickData: Record<string, number> = {};
     if (
       this.kMap.KeyW === true ||
       this.kMap.KeyA === true ||
@@ -117,38 +123,41 @@ export class Controller {
       this.kMap.ArrowLeft === true ||
       this.kMap.ArrowRight === true
     ) {
-      stickData.yaw =
-        this.speed *
-        (this.kMap.KeyA === true ? -1 : this.kMap.KeyD === true ? 1 : 0);
-      stickData.throttle =
-        this.speed *
-        (this.kMap.KeyS === true ? -1 : this.kMap.KeyW === true ? 1 : 0);
-      stickData.roll =
-        this.speed *
-        (this.kMap.ArrowLeft === true
-          ? -1
-          : this.kMap.ArrowRight === true
-          ? 1
-          : 0);
-      stickData.pitch =
-        this.speed *
-        (this.kMap.ArrowDown === true
-          ? -1
-          : this.kMap.ArrowUp === true
-          ? 1
-          : 0);
-
-      console.log(stickData);
-      this.sendCmd("stick", stickData);
+      this.sendStickData({
+        yaw:
+          this.speed *
+          (this.kMap.KeyA === true ? -1 : this.kMap.KeyD === true ? 1 : 0),
+        throttle:
+          this.speed *
+          (this.kMap.KeyS === true ? -1 : this.kMap.KeyW === true ? 1 : 0),
+        roll:
+          this.speed *
+          (this.kMap.ArrowLeft === true
+            ? -1
+            : this.kMap.ArrowRight === true
+            ? 1
+            : 0),
+        pitch:
+          this.speed *
+          (this.kMap.ArrowDown === true
+            ? -1
+            : this.kMap.ArrowUp === true
+            ? 1
+            : 0),
+      });
     } else {
-      stickData.yaw = 0;
-      stickData.throttle = 0;
-      stickData.roll = 0;
-      stickData.pitch = 0;
-      console.log(stickData);
-      this.sendCmd("stick", stickData);
+      this.sendStickData({
+        yaw: 0,
+        throttle: 0,
+        roll: 0,
+        pitch: 0,
+      });
     }
     return false;
+  }
+
+  public sendStickData(data: StickData) {
+    this.sendCmd("stick", data);
   }
 
   private initUI() {

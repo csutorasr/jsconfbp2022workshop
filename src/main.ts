@@ -1,5 +1,5 @@
 import "./style.css";
-import {Player} from './Player';
+import { Player } from "./Player";
 
 var ws_video: WebSocket;
 var ws_telemetry: WebSocket;

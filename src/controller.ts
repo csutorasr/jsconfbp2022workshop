@@ -1,6 +1,7 @@
+// @ts-ignore
 import { Player } from "./Player";
 
-interface StickData {
+export interface StickData {
   yaw: number;
   throttle: number;
   roll: number;
@@ -23,7 +24,7 @@ export class Controller {
   ws_video!: WebSocket;
   ws_telemetry!: WebSocket;
   telemetry_obj = document.getElementById("telemetryFeed") as HTMLElement;
-  h264_player!: { canvas: HTMLCanvasElement };
+  h264_player!: { canvas: HTMLCanvasElement; decode: any };
   kMap: Record<string, boolean> = {};
   stickData = {
     roll: 0,
@@ -40,7 +41,7 @@ export class Controller {
     this.ws_telemetry.send("t");
   }
 
-  processFrame(imgString) {
+  processFrame(imgString: any) {
     if (imgString.data != "false") {
       this.h264_player.decode(toUint8Array(imgString.data));
     } else {
@@ -48,7 +49,7 @@ export class Controller {
     }
   }
 
-  processTelemetry(data) {
+  processTelemetry(data: any) {
     this.telemetry_obj.innerHTML = data.data;
   }
 
@@ -90,19 +91,19 @@ export class Controller {
       webgl: "auto",
       size: { width: 960, height: 720 },
     });
-    document.getElementById("videoFeed").appendChild(this.h264_player.canvas);
+    (document.getElementById("videoFeed") as HTMLDivElement).appendChild(this.h264_player.canvas);
   }
 
   private initKeyboard() {
     document.body.onkeydown = document.body.onkeyup = (e) => {
       e.preventDefault();
       this.kMap[e.code] = e.type == "keydown" ? true : false;
-      this.keyboardEvent(e);
+      this.keyboardEvent();
     };
   }
 
   speed = 0.5;
-  keyboardEvent(e: KeyboardEvent) {
+  keyboardEvent() {
     if (
       this.kMap.Space === true &&
       (this.kMap.ShiftLeft === true || this.kMap.ShiftRight === true)
@@ -160,9 +161,10 @@ export class Controller {
   }
 
   private initUI() {
+    const select = document.getElementById("settings-ev") as HTMLSelectElement;
     // settings: exposure value
-    document.getElementById("settings-ev").onchange = () => {
-      this.sendCmd("ev", document.getElementById("settings-ev").value);
+    select.onchange = () => {
+      this.sendCmd("ev", select.value);
     };
   }
 

@@ -50,7 +50,11 @@ export class DroneDriver {
   }
 
   processTelemetry(data: any) {
-    this.telemetry_obj.innerHTML = data.data;
+    // this.telemetry_obj.innerHTML = data.data;
+    const dataParsed = JSON.parse(data.data);
+    (document.getElementById('battery-percentage') as HTMLDivElement).innerHTML = dataParsed.state.battery.percentage;
+    (document.getElementById('battery-voltage') as HTMLDivElement).innerHTML = dataParsed.state.battery.voltage;
+    (document.getElementById('wifi') as HTMLDivElement).innerHTML = dataParsed.wifi;
   }
 
   connect() {
@@ -157,7 +161,26 @@ export class DroneDriver {
   }
 
   public sendStickData(data: StickData) {
+    this.showStickData(data);
     this.sendCmd("stick", data);
+  }
+
+  private showStickData(data: StickData) {
+    for (const attribute of Object.keys(data)) {
+      this.showStickDataAttribute((data as any)[attribute], attribute);
+    }
+  }
+
+  private showStickDataAttribute(value: number, attribute: string) {
+    const minusRange = document.getElementById(`${attribute}-minus`);
+    const plusRange = document.getElementById(`${attribute}-plus`);
+    (minusRange as HTMLProgressElement).value = 0;
+    (plusRange as HTMLProgressElement).value = 0;
+    if (value < 0) {
+      (minusRange as HTMLProgressElement).value = Math.abs(value);
+    } else {
+      (plusRange as HTMLProgressElement).value = Math.abs(value);
+    }
   }
 
   private initUI() {
